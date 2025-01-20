@@ -24,27 +24,84 @@ export default defineContentScript({
     '*://*.amazon.sg/*',
   ],
   main() {
+    const getLanguageAndZLibraryDomain = (
+      url: string
+    ): { language: string; zLibraryDomain: string } => {
+      const domain = new URL(url).hostname;
+      const countryCode = domain.split('.')[1];
+
+      const regionMap: Record<
+        string,
+        { language: string; zLibraryDomain: string }
+      > = {
+        ae: { language: 'ar', zLibraryDomain: 'z-lib.fm' }, // Arabic (UAE)
+        ca: { language: 'en', zLibraryDomain: 'z-library.sk' }, // English (Canada)
+        cn: { language: 'zh', zLibraryDomain: 'z-lib.gs' }, // Chinese (China)
+        jp: { language: 'ja', zLibraryDomain: 'z-lib.fm' }, // Japanese (Japan)
+        'co.jp': { language: 'ja', zLibraryDomain: 'z-lib.fm' }, // Japanese (Japan)
+        uk: { language: 'en', zLibraryDomain: 'z-library.sk' }, // English (UK)
+        us: { language: 'en', zLibraryDomain: 'z-library.sk' }, // English (US)
+        'com.au': { language: 'en', zLibraryDomain: 'z-library.sk' }, // English (Australia)
+        'com.br': { language: 'pt', zLibraryDomain: 'z-lib.gs' }, // Portuguese (Brazil)
+        'com.tr': { language: 'tr', zLibraryDomain: 'z-lib.fm' }, // Turkish (Turkey)
+        'com.mx': { language: 'es', zLibraryDomain: 'z-lib.gs' }, // Spanish (Mexico)
+        de: { language: 'de', zLibraryDomain: 'z-lib.fm' }, // German (Germany)
+        es: { language: 'es', zLibraryDomain: 'es.1lib.sk' }, // Spanish (Spain)
+        fr: { language: 'fr', zLibraryDomain: 'z-lib.gs' }, // French (France)
+        in: { language: 'hi', zLibraryDomain: 'z-library.sk' }, // Hindi (India)
+        it: { language: 'it', zLibraryDomain: 'it.1lib.sk' }, // Italian (Italy)
+        nl: { language: 'nl', zLibraryDomain: 'z-lib.fm' }, // Dutch (Netherlands)
+        pl: { language: 'pl', zLibraryDomain: 'z-lib.gs' }, // Polish (Poland)
+        sa: { language: 'ar', zLibraryDomain: 'z-lib.fm' }, // Arabic (Saudi Arabia)
+        se: { language: 'sv', zLibraryDomain: 'z-lib.fm' }, // Swedish (Sweden)
+        sg: { language: 'en', zLibraryDomain: 'z-library.sk' }, // English (Singapore)
+        eg: { language: 'ar', zLibraryDomain: 'z-lib.fm' }, // Arabic (Egypt)
+      };
+
+      return (
+        regionMap[countryCode] || {
+          language: 'en',
+          zLibraryDomain: 'z-library.sk',
+        }
+      ); // Default to English (US)
+    };
+
     const isBookPage = (): boolean => {
+      const bookKeywords = [
+        'book',
+        'livre',
+        'Buch',
+        'libro',
+        'livro',
+        '書籍',
+        'книга',
+        'buch',
+        'tome',
+        'cahier',
+      ];
+
       const breadcrumb = document.querySelector(
         '#wayfinding-breadcrumbs_feature_div'
       );
-      if (
-        breadcrumb &&
-        breadcrumb.textContent?.toLowerCase().includes('book')
-      ) {
-        return true;
+      if (breadcrumb) {
+        const breadcrumbText = breadcrumb.textContent?.toLowerCase();
+        if (bookKeywords.some((keyword) => breadcrumbText?.includes(keyword))) {
+          return true;
+        }
       }
 
-      // Check for meta keywords that include "book"
       const metaKeywords = document.querySelector('meta[name="keywords"]');
-      if (
-        metaKeywords &&
-        metaKeywords.getAttribute('content')?.toLowerCase().includes('book')
-      ) {
-        return true;
+      if (metaKeywords) {
+        const keywordsContent = metaKeywords
+          .getAttribute('content')
+          ?.toLowerCase();
+        if (
+          bookKeywords.some((keyword) => keywordsContent?.includes(keyword))
+        ) {
+          return true;
+        }
       }
 
-      // Check if "ISBN" or "pages" is mentioned in the product details section
       const productDetails =
         document.querySelector('#productDetailsTable') ||
         document.querySelector('#detailBullets_feature_div');
@@ -55,49 +112,45 @@ export default defineContentScript({
         return true;
       }
 
-      // Default to false if no indicators are found
       return false;
+    };
+
+    const createSearchButton = (text: string, url: string) => {
+      const button = document.createElement('a');
+
+      button.href = url;
+      button.target = '_blank';
+      button.role = 'button';
+      button.className = 'a-button a-button-primary';
+      button.style.width = '100%';
+      button.style.boxSizing = 'border-box';
+      button.style.margin = '0px';
+
+      const innerSpan = document.createElement('span');
+      innerSpan.className = 'a-button-inner';
+
+      const textSpan = document.createElement('span');
+      textSpan.className = 'a-button-text';
+      textSpan.style.textAlign = 'center';
+      textSpan.textContent = text;
+
+      innerSpan.appendChild(textSpan);
+      button.appendChild(innerSpan);
+
+      return button;
     };
 
     if (isBookPage()) {
       const bookTitle = document.getElementById(
         'productTitle'
       ) as HTMLSpanElement;
+      const { zLibraryDomain } = getLanguageAndZLibraryDomain(
+        window.location.href
+      );
+      const encodedBookTitle = encodeURIComponent(bookTitle.innerText.trim());
 
-      const createSearchButton = (text: string, url: string) => {
-        const button = document.createElement('a');
-
-        button.href = url;
-        button.target = '_blank';
-        button.role = 'button';
-        button.className = 'a-button a-button-primary';
-        button.style.width = '100%';
-        button.style.boxSizing = 'border-box';
-        button.style.margin = '0px';
-
-        const innerSpan = document.createElement('span');
-        innerSpan.className = 'a-button-inner';
-
-        const textSpan = document.createElement('span');
-        textSpan.className = 'a-button-text';
-        textSpan.style.textAlign = 'center';
-        textSpan.textContent = text;
-
-        innerSpan.appendChild(textSpan);
-        button.appendChild(innerSpan);
-
-        return button;
-      };
-
-      const encodeQuery = (query: string): string =>
-        encodeURIComponent(query.trim());
-
-      const zLibraryURL = `https://z-lib.gs/s/${encodeURIComponent(
-        bookTitle.innerText
-      )}/?content_type=book`;
-      const annaArchiveURL = `https://annas-archive.org/search?index=&page=1&q=${encodeQuery(
-        bookTitle.innerText
-      )}&display=&sort=`;
+      const zLibraryURL = `https://${zLibraryDomain}/s/${encodedBookTitle}/?content_type=book`;
+      const annaArchiveURL = `https://annas-archive.org/search?index=&page=1&q=${encodedBookTitle}&display=&sort=`;
 
       const container = document.querySelector('#tmmSwatchesList');
       const exBtnContainer = document.createElement('div');
@@ -107,10 +160,9 @@ export default defineContentScript({
       exBtnContainer.style.paddingLeft = '6px';
       exBtnContainer.style.display = 'flex';
       exBtnContainer.style.flexDirection = 'column';
-      exBtnContainer.style.gap = '8px'; // Add spacing between buttons
+      exBtnContainer.style.gap = '8px';
 
       if (container) {
-        // Create buttons
         const zLibraryButton = createSearchButton(
           'Search on ZLibrary',
           zLibraryURL
