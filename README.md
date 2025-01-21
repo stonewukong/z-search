@@ -1,6 +1,6 @@
 # Z-Search
 
-This browser extension makes it easier for you to find books on ZLibrary and Anna's Archive directly from Amazon pages. When you're browsing Amazon, it automatically detects the language and the correct ZLibrary domain for your region, so you don’t have to worry about searching for the right version. It’s a quick and simple way to access books you’re interested in!
+I made this browser extension because I was tired of jumping tabs to find books on ZLibrary and Anna’s Archive after browsing on Amazon. Now, with this extension, you get two simple buttons right on the page—one for ZLibrary and one for Anna’s Archive. It’s made my life so much easier, and I hope it helps you too.
 
 ## Features
 
