@@ -33,6 +33,58 @@ The extension supports a wide range of Amazon websites across different countrie
 - Amazon Singapore (`amazon.sg`)
 - Amazon Egypt (`amazon.eg`)
 
+## Build Instructions
+
+Follow these steps to build an exact copy of the extension:
+
+### Prerequisites
+
+1. Install [Node.js](https://nodejs.org/) (version 20.x or higher).
+2. Install [pnpm](https://pnpm.io/)
+3. Operating System: Works on macOS, Windows, and Linux.
+
+### Steps
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/stonewukong/z-search.git
+   cd z-search
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   pnpm install
+   ```
+
+3. Build the extension:
+
+   ```bash
+   pnpm build // For chrome
+   pnpm build:firefox // For firefox
+
+   // For zip file
+   pnpm zip
+   pnpm zip:firefox
+   ```
+
+   The built extension files will be available in the .output/ directory.
+
+4. Load the extension in Firefox:
+
+   Chrome
+
+   - Open chrome://extensions/.
+   - Enable "Developer mode" (top-right corner).
+   - Click "Load unpacked" and select the .output/chrome-mv3 directory.
+
+   Firefox
+
+   - Open Firefox and go to about:debugging.
+   - Select "This Firefox" > "Load Temporary Add-on".
+   - Choose the manifest.json file inside the .output/ folder or load the zip file
+
 ## License
 
 Licensed under the GNU Affero General Public License Version 3.0.
