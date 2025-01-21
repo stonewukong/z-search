@@ -1,8 +1,8 @@
 {
-  "name": "wxt-starter",
-  "description": "manifest.json description",
+  "name": "Z-Search",
+  "description": "A browser extension which adds 'Search on ZLibrary' and 'Search on Anna's Archive' buttons to Amazon book pages",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
